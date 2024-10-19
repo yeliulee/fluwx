@@ -1,6 +1,6 @@
 part of 'arguments.dart';
 
-sealed class OpenType with _Argument {}
+class OpenType with _Argument {}
 
 /// Just open WeChat app.
 class WeChatApp extends OpenType {}

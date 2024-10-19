@@ -1,6 +1,6 @@
 part of 'arguments.dart';
 
-sealed class PayType with _Argument {}
+class PayType with _Argument {}
 
 /// request payment with WeChat.
 /// Read the official document for more detail.

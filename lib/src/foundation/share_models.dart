@@ -30,7 +30,7 @@ const String _msgSignature = "msgSignature";
 const String _thumbData = "thumbData";
 const String _thumbDataHash = "thumbDataHash";
 
-sealed class WeChatShareModel with _Argument {
+class WeChatShareModel with _Argument {
   final String? title;
   final String? description;
   final Uint8List? thumbData;

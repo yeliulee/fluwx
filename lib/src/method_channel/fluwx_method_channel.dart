@@ -98,33 +98,33 @@ class MethodChannelFluwx extends FluwxPlatform {
   /// );
   @override
   Future<bool> open(OpenType target) async {
-    switch (target) {
-      case WeChatApp():
-        return await methodChannel.invokeMethod('openWXApp') ?? false;
-      case Browser():
-        return await methodChannel.invokeMethod('openUrl') ?? false;
-      case RankList():
-        return await methodChannel.invokeMethod("openRankList") ?? false;
-      case BusinessView():
-        return await methodChannel.invokeMethod(
-                "openBusinessView", target.arguments) ??
-            false;
-      case Invoice():
-        return await methodChannel.invokeMethod(
-                "openWeChatInvoice", target.arguments) ??
-            false;
-      case CustomerServiceChat():
-        return await methodChannel.invokeMethod(
-                "openWeChatCustomerServiceChat", target.arguments) ??
-            false;
-      case MiniProgram():
-        return await methodChannel.invokeMethod(
-                'launchMiniProgram', target.arguments) ??
-            false;
-      case SubscribeMessage():
-        return await methodChannel.invokeMethod(
-            'subscribeMsg', target.arguments);
+    if (target is WeChatApp) {
+      return await methodChannel.invokeMethod('openWXApp') ?? false;
+    } else if (target is Browser) {
+      return await methodChannel.invokeMethod('openUrl') ?? false;
+    } else if (target is RankList) {
+      return await methodChannel.invokeMethod("openRankList") ?? false;
+    } else if (target is BusinessView) {
+      return await methodChannel.invokeMethod(
+              "openBusinessView", target.arguments) ??
+          false;
+    } else if (target is Invoice) {
+      return await methodChannel.invokeMethod(
+              "openWeChatInvoice", target.arguments) ??
+          false;
+    } else if (target is CustomerServiceChat) {
+      return await methodChannel.invokeMethod(
+              "openWeChatCustomerServiceChat", target.arguments) ??
+          false;
+    } else if (target is MiniProgram) {
+      return await methodChannel.invokeMethod(
+              'launchMiniProgram', target.arguments) ??
+          false;
+    } else if (target is SubscribeMessage) {
+      return await methodChannel.invokeMethod('subscribeMsg', target.arguments);
     }
+
+    return false;
   }
 
   @override
@@ -178,32 +178,31 @@ class MethodChannelFluwx extends FluwxPlatform {
 
   @override
   Future<bool> authBy(AuthType which) async {
-    switch (which) {
-      case NormalAuth():
-        return await methodChannel.invokeMethod(
-          'sendAuth',
-          which.arguments,
-        );
-      case QRCode():
-        return await methodChannel.invokeMethod(
-                'authByQRCode', which.arguments) ??
-            false;
-      case PhoneLogin():
-        return await methodChannel.invokeMethod(
-            'authByPhoneLogin', which.arguments);
+    if (which is NormalAuth) {
+      return await methodChannel.invokeMethod(
+        'sendAuth',
+        which.arguments,
+      );
+    } else if (which is QRCode) {
+      return await methodChannel.invokeMethod(
+              'authByQRCode', which.arguments) ??
+          false;
+    } else if (which is PhoneLogin) {
+      return await methodChannel.invokeMethod(
+          'authByPhoneLogin', which.arguments);
     }
+    return false;
   }
 
   @override
   Future<bool> pay(PayType which) async {
-    switch (which) {
-      case Payment():
-        return await methodChannel.invokeMethod(
-            'payWithFluwx', which.arguments);
-      case HongKongWallet():
-        return await methodChannel.invokeMethod(
-            'payWithHongKongWallet', which.arguments);
+    if (which is Payment) {
+      return await methodChannel.invokeMethod('payWithFluwx', which.arguments);
+    } else if (which is HongKongWallet) {
+      return await methodChannel.invokeMethod(
+          'payWithHongKongWallet', which.arguments);
     }
+    return false;
   }
 
   @override
