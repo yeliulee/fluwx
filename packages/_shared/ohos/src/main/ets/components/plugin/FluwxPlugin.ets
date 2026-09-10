@@ -127,8 +127,7 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
         result.notImplemented();
         break;
       case "openUrl":
-        // TODO
-        result.notImplemented();
+        this.openUrl(call, result);
         break;
       case "openRankList":
         // TODO
@@ -321,6 +320,15 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
     const request = new wechatSDK.OpenCustomerServiceChatReq();
     request.corpId = call.argument("corpId") ?? "";
     request.url = call.argument("url") ?? "";
+
+    const done = await WXAPiHandler.wxApi?.sendReq(this.uiContext, request);
+
+    result.success(done);
+  }
+
+  async openUrl(call: MethodCall, result: MethodResult) {
+    const request = new wechatSDK.OpenWebViewReq();
+    request.url = call.argument("url");
 
     const done = await WXAPiHandler.wxApi?.sendReq(this.uiContext, request);
 
