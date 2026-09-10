@@ -96,8 +96,7 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
         this.launchMiniProgram(call, result);
         break;
       case "subscribeMsg":
-        // TODO
-        result.notImplemented();
+        this.subscribeMsg(call, result);
         break;
       case "autoDeduct":
         // TODO
@@ -183,6 +182,11 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
       this.onLaunchMiniProgramResp(resp);
       return;
     }
+
+    if (resp instanceof wechatSDK.SubscribeMessageResp) {
+      this.onSubscribeMessageResp(resp);
+      return;
+    }
   }
 
   // 微信回调 end
@@ -238,6 +242,20 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
     this.channel?.invokeMethod("onLaunchMiniProgramResponse", _result);
   }
 
+  onSubscribeMessageResp(resp: wechatSDK.SubscribeMessageResp) {
+    const _result: Map<string, ESObject> = new Map();
+    _result.set(KEY_ERR_CODE, resp.errCode);
+    _result.set(KEY_ERR_STR, resp.errStr);
+    _result.set(KEY_TYPE, resp.type);
+    _result.set(KEY_OPEN_ID, resp.openId);
+    _result.set("templateId", resp.templateId);
+    _result.set("scene", resp.scene);
+    _result.set("reserved", resp.reserved);
+    _result.set("action", resp.action);
+
+    this.channel?.invokeMethod("onSubscribeMsgResp", _result);
+  }
+
   async handlePay(call: MethodCall, result: MethodResult) {
     if (!WXAPiHandler.wxApi) {
       result.error("Unassigned WxApi", "please config wxapi first", null);
@@ -270,6 +288,18 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
     request.path = call.argument("path");
     // sdk 内当前没 type 常量, 直接使用传入的参数
     request.miniprogramType = call.argument("miniProgramType") ?? 0;
+
+    const done = await WXAPiHandler.wxApi?.sendReq(this.uiContext, request);
+
+    result.success(done);
+  }
+
+  async subscribeMsg(call: MethodCall, result: MethodResult) {
+    const request = new wechatSDK.SubscribeMessageReq();
+    request.openId = call.argument("appId");
+    request.scene = call.argument("scene");
+    request.reserved = call.argument("reserved");
+    request.templateId = call.argument("templateId");
 
     const done = await WXAPiHandler.wxApi?.sendReq(this.uiContext, request);
 
