@@ -14,6 +14,7 @@ import { FluwxAuthHandler } from './handlers/FluwxAuthHandler';
 import { AbilityConstant, common, Want } from '@kit.AbilityKit';
 import { WXAPiHandler } from './handlers/WXAPiHandler';
 import { FluwxShareHandler } from './handlers/FluwxShareHandler';
+import { mapToRecord } from './utils/FluwxUtils';
 
 const MESSAGE_CHANNEL_NAME = "com.jarvanmo/fluwx"
 const KEY_ERR_STR = "errStr"
@@ -89,8 +90,7 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
         this.handlePay(call, result);
         break;
       case "payWithHongKongWallet":
-        // TODO
-        result.notImplemented();
+        this.payWithHongKongWallet(call, result);
         break;
       case "launchMiniProgram":
         this.launchMiniProgram(call, result);
@@ -99,12 +99,10 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
         this.subscribeMsg(call, result);
         break;
       case "autoDeduct":
-        // TODO
-        result.notImplemented();
+        this.signAutoDeduct(call, result);
         break;
       case "autoDeductV2":
-        // TODO
-        result.notImplemented();
+        this.signAutoDeductV2(call, result);
         break;
       case "openWXApp":
         result.success(WXAPiHandler.wxApi?.openWechat(this.uiContext));
@@ -186,6 +184,16 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
       this.onSubscribeMessageResp(resp);
       return;
     }
+
+    if (resp instanceof wechatSDK.OpenBusinessWebViewResp) {
+      this.onOpenBusinessWebViewResp(resp);
+      return;
+    }
+
+    if (resp instanceof wechatSDK.OpenBusinessViewResp) {
+      this.onOpenBusinessViewResp(resp);
+      return;
+    }
   }
 
   // 微信回调 end
@@ -255,6 +263,30 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
     this.channel?.invokeMethod("onSubscribeMsgResp", _result);
   }
 
+  onOpenBusinessWebViewResp(resp: wechatSDK.OpenBusinessWebViewResp) {
+    const _result: Map<string, ESObject> = new Map();
+    _result.set(KEY_ERR_CODE, resp.errCode);
+    _result.set(KEY_ERR_STR, resp.errStr);
+    _result.set(KEY_TYPE, resp.type);
+    _result.set(KEY_OPEN_ID, resp.openId);
+    _result.set("businessType", resp.businessType);
+    _result.set("resultInfo", resp.resultInfo);
+
+    this.channel?.invokeMethod("onOpenBusinessViewResp", _result);
+  }
+
+  onOpenBusinessViewResp(resp: wechatSDK.OpenBusinessViewResp) {
+    const _result: Map<string, ESObject> = new Map();
+    _result.set(KEY_ERR_CODE, resp.errCode);
+    _result.set(KEY_ERR_STR, resp.errStr);
+    _result.set(KEY_TYPE, resp.type);
+    _result.set(KEY_OPEN_ID, resp.openId);
+    _result.set("businessType", resp.businessType);
+    _result.set("extMsg", resp.extMsg);
+
+    this.channel?.invokeMethod("onOpenBusinessViewResp", _result);
+  }
+
   async handlePay(call: MethodCall, result: MethodResult) {
     if (!WXAPiHandler.wxApi) {
       result.error("Unassigned WxApi", "please config wxapi first", null);
@@ -277,6 +309,17 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
     result.success(done);
   }
 
+  async payWithHongKongWallet(call: MethodCall, result: MethodResult) {
+    const prepayId: string = call.argument("prepayId") ?? "";
+    const request = new wechatSDK.OpenBusinessWebViewReq();
+    request.businessType = 1;
+    request.queryInfo = {
+      "token": prepayId
+    }
+    const done = await WXAPiHandler.wxApi?.sendReq(this.uiContext, request);
+    result.success(done);
+  }
+
   attemptToResumeMsgFromWx(result: MethodResult) {
     WXAPiHandler.wxApi?.handleWant(this.binding?.getAbility().launchWant, this)
   }
@@ -290,6 +333,36 @@ export default class FluwxPlugin implements FlutterPlugin, MethodCallHandler, Ab
 
     const done = await WXAPiHandler.wxApi?.sendReq(this.uiContext, request);
 
+    result.success(done);
+  }
+
+  async signAutoDeduct(call: MethodCall, result: MethodResult) {
+    const request = new wechatSDK.OpenBusinessWebViewReq();
+    request.businessType = call.argument("businessType") ?? 12;
+    request.queryInfo = {
+      "appid": call.argument("appid") ?? "",
+      "mch_id": call.argument("mch_id") ?? "",
+      "plan_id": call.argument("plan_id") ?? "",
+      "contract_code": call.argument("contract_code") ?? "",
+      "request_serial": call.argument("request_serial") ?? "",
+      "contract_display_account": call.argument("contract_display_account") ?? "",
+      "notify_url": call.argument("notify_url") ?? "",
+      "version": call.argument("version") ?? "",
+      "sign": call.argument("sign") ?? "",
+      "timestamp": call.argument("timestamp") ?? "",
+      "return_app": call.argument("return_app") ??  ""
+    }
+    const done = await WXAPiHandler.wxApi?.sendReq(this.uiContext, request);
+    result.success(done);
+  }
+
+  async signAutoDeductV2(call: MethodCall, result: MethodResult) {
+    const queryInfo: Map<string, ESObject> = call.argument("queryInfo") ?? new Map<string, ESObject>();
+
+    const request = new wechatSDK.OpenBusinessWebViewReq();
+    request.businessType = call.argument("businessType") ?? 12;
+    request.queryInfo = mapToRecord(queryInfo);
+    const done = await WXAPiHandler.wxApi?.sendReq(this.uiContext, request);
     result.success(done);
   }
 
